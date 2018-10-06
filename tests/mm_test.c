@@ -114,6 +114,7 @@ static void test_mm(void) {
     } else {
         fail();
     }
+    buddy_mm_uninit(mm);
 }
 
 int main( void ) {

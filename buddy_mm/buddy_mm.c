@@ -13,6 +13,10 @@ struct buddy_mm_t {
     size_t header_and_align_size;
 };
 
+void *get_shift(buddy_mm_t *mm) {
+    return mm->space;
+}
+
 size_t calculate_power_of_two (size_t degree) {
     size_t rez = 1;
     for (int i = 0; i < degree; i++) {
@@ -70,6 +74,12 @@ buddy_mm_t *buddy_mm_init(size_t degree) {
     buddy_mm->size_of_space = size_of_space;
     buddy_mm->avail_blocks = avail_blocks;
     return buddy_mm;
+}
+
+void buddy_mm_uninit( buddy_mm_t *mm ) {
+    free(mm->space);
+    free(mm->avail_blocks);
+    free(mm);
 }
 
 size_t get_size_by_index(size_t index, size_t size) {

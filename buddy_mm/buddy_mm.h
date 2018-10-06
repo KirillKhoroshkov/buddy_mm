@@ -12,6 +12,8 @@ typedef struct block_header_t block_header_t;
 extern buddy_mm_t *buddy_mm_init( size_t degree );
 extern void buddy_mm_uninit( buddy_mm_t *mm );
 
+void *get_shift(buddy_mm_t *mm);
+
 extern void *buddy_mm_malloc(buddy_mm_t *mm, size_t size);
 extern void buddy_mm_free(buddy_mm_t *mm, void *ptr);
 

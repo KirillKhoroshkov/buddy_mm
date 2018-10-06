@@ -40,12 +40,22 @@ int main( ) {
                 size_t degree = init_parameters->degree;
                 if (buddy_mm != NULL) {
                     buddy_mm_uninit(buddy_mm);
-                    buddy_mm = buddy_mm_init(degree);
                 }
+                buddy_mm = buddy_mm_init(degree);
+                shift = get_shift(buddy_mm);
+                message = malloc(32);
+                sprintf(message, "%p", shift);
             } else if (command_code == allocate_command_code) {
                 allocate_parameters_t *allocate_parameters = (allocate_parameters_t *) parameters;
                 size_t size = allocate_parameters->size;
-                /**/
+                if (buddy_mm == NULL) {
+                    error_info = get_error_info_by_code(not_configured_error);
+                } else {
+                    void *address = buddy_mm_malloc(buddy_mm, size * sizeof(char));
+                    void *relative_address = (void *) (address - shift);
+                    message = malloc(32);
+                    sprintf(message, "%p", relative_address);
+                }
             } else if (command_code == print_command_code) {
                 /**/
             } else if (command_code == reallocate_command_code) {
@@ -79,19 +89,42 @@ int main( ) {
                 }
             } else if (command_code == free_command_code) {
                 free_parameters_t *free_parameters = (free_parameters_t *) parameters;
-                void *address = free_parameters->address;
-                /**/
+                void *relative_address = free_parameters->address;
+                if (buddy_mm == NULL) {
+                    error_info = get_error_info_by_code(not_configured_error);
+                } else {
+                    void *address = (void *) ((size_t) relative_address + (size_t) shift);
+                    buddy_mm_free(buddy_mm, address);
+                    message = malloc(32);
+                    sprintf(message, "%p", relative_address);
+                }
             } else if (command_code == get_command_code) {
-                get_parameters_t *get_parameters = (get_parameters_t *) parameters;
-                void *address = get_parameters->address;
-                size_t index = get_parameters->index;
-                /**/
+                if (buddy_mm == NULL) {
+                    error_info = get_error_info_by_code(not_configured_error);
+                } else {
+                    get_parameters_t *get_parameters = (get_parameters_t *) parameters;
+                    void *relative_address = get_parameters->address;
+                    size_t index = get_parameters->index;
+                    void *address = (void *) ((size_t) relative_address + (size_t) shift);
+                    char *ch = (char *) address + index;
+                    message = malloc(sizeof(char) * 2);
+                    sprintf(message, "%c", *ch);
+                }
             } else if (command_code == set_command_code) {
-                set_parameters_t *set_parameters = (set_parameters_t *) parameters;
-                void *address = set_parameters->address;
-                size_t index = set_parameters->index;
-                char new_value = set_parameters->new_value;
-                /**/
+                if (buddy_mm == NULL) {
+                    error_info = get_error_info_by_code(not_configured_error);
+                } else {
+                    set_parameters_t *set_parameters = (set_parameters_t *) parameters;
+                    void *relative_address = set_parameters->address;
+                    void *address = (void *) ((size_t) relative_address + (size_t) shift);
+                    size_t index = set_parameters->index;
+                    char new_value = set_parameters->new_value;
+                    char *ch = (char *) address + index;
+                    char old_value = *ch;
+                    *ch = new_value;
+                    message = malloc(sizeof(char) * 2);
+                    sprintf(message, "%c", old_value);
+                }
             }
             free_command_info(command_info);
         }
